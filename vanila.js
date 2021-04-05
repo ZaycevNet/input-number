@@ -34,7 +34,7 @@ module.exports = class InputNumber {
     }
 
     setValue(value, caret = undefined, saveCaret = false) {
-        if(Number(value) === Number(this.getValue()))
+        if(Number(value || 0) === Number(this.getValue() || 0))
             return;
 
         caret = caret || [0, this.el.value.length];
