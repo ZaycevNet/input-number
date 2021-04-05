@@ -2,7 +2,7 @@
   "name": "@za-utils/input-number",
   "version": "0.0.1",
   "description": "Simple number input",
-  "main": "dist/index.js",
+  "main": "vanila.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
