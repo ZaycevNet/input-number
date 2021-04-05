@@ -221,9 +221,9 @@ module.exports = class InputNumber {
                 } else {
                     this.el.setSelectionRange(newCaret[0] + 1, newCaret[0] + 1);
                 }
-            }
 
-            this.changeHandler(newValue);
+                this.changeHandler(newValue);
+            }
         }
 
         e.preventDefault();
