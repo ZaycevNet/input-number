@@ -34,6 +34,9 @@ module.exports = class InputNumber {
     }
 
     setValue(value, caret = undefined, saveCaret = false) {
+        if(Number(value) === Number(this.getValue()))
+            return;
+
         caret = caret || [0, this.el.value.length];
 
         const future = this.getFutureValue(caret, value, false);
