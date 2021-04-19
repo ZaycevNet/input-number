@@ -33,8 +33,74 @@ module.exports = class InputNumber {
         this.options.max = max;
     }
 
+    getNewCaretPos(prevNumbers, newNumbers, caret) {
+        /**
+         * сначала узнаем где была каретка до ввода нового значения
+         * потом надо посмотреть можем ли мы поставить каретку в
+         * тоже место с новым значением
+         */
+
+        if(prevNumbers[0].length >= caret) {
+            // каретка в целых
+
+            // проверяем можем ли мы поставить ее в то же место
+            if(newNumbers[0].length >= caret) {
+                // можем
+
+                return caret;
+            }
+
+            // мы не можем поставить ее в то же место
+            // поставим ее в конец целых
+
+            return newNumbers[0].length;
+        } else {
+            // каретка была либо в дробной части, либо число сильно изменилось
+
+            if(prevNumbers[1]) {
+                // есть дробная часть
+                // надо узнать в как отличается новая и стараю дробные части
+
+                if(prevNumbers[1].length >= newNumbers[1].length) {
+                    // предыдущая дробная часть была больше или равна новой
+
+                    // проверим можем ли мы вставить каретку в новую дробную часть
+                    if(newNumbers[1].length >= caret) {
+                        // можем
+
+                        return caret;
+                    }
+
+                    // не можем, надо узнать на сколько символов разнятся части
+
+                    const delta = prevNumbers[1].length - newNumbers[1].length;
+                    // заполним пустоту нулями
+                    this.el.value = this.el.value + (new Array(delta).fill('0').join(''));
+
+                    // и можем вставлять каретку обратно
+                    return caret;
+                }
+
+                // новая дробная часть больше предыдущей
+                // можем просто вставить каретку
+                return caret;
+            }
+
+            return caret;
+        }
+    }
+    setCaretInPreviousPlace(prevNumbers, newNumbers, caret) {
+        const caretStart = this.getNewCaretPos(prevNumbers, newNumbers, caret[0]);
+        const caretEnd = this.getNewCaretPos(prevNumbers, newNumbers, caret[1]);
+
+        this.el.setSelectionRange(caretStart, caretEnd);
+    }
+
     setValue(value, caret = undefined, saveCaret = false) {
-        if(Number(value || 0) === Number(this.getValue() || 0))
+        const currentValue = this.getValue();
+        const currentNumbers = this.getNumbers(currentValue);
+
+        if(Number(value || 0) === Number(currentValue || '0'))
             return;
 
         caret = caret || [0, this.el.value.length];
@@ -50,7 +116,7 @@ module.exports = class InputNumber {
             this.el.value = newValue;
 
             if(saveCaret) {
-                this.el.setSelectionRange(newCaret[0], newCaret[0]);
+                this.setCaretInPreviousPlace(currentNumbers, numbers, newCaret);
             } else {
                 this.el.setSelectionRange(newCaret[0] + value.length, newCaret[0] + value.length);
             }
