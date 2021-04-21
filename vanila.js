@@ -8,6 +8,7 @@ module.exports = class InputNumber {
             max: undefined,
         };
 
+        this.prevValue = '';
         this.metaKey = false;
         this.metaKeys = {
             ctrlKey: 17,
@@ -132,11 +133,11 @@ module.exports = class InputNumber {
             this.el.selectionEnd,
         ];
     }
-    getFutureValue(caret, key, singleKey = true) {
-        const [startPos, endPos] = caret;
-        const value = this.getValue().split('');
+    getFutureValue(caret, key, singleKey = true, usePrevValue = false) {
+        const [startPos, endPos] = usePrevValue ? [caret[0] -1, caret[1] -1] : caret;
+        const value = (usePrevValue ? this.prevValue : this.getValue()).split('');
 
-        if(key === 'Backspace' && singleKey) {
+        if((!usePrevValue && key === 'Backspace') && singleKey) {
             if(startPos === 1)
                 this.firstDelete = true;
 
@@ -299,6 +300,36 @@ module.exports = class InputNumber {
         e.stopPropagation();
         return false;
     }
+    onInput(e) {
+        if(!e.data)
+            return false;
+
+        const caret = this.getCaret();
+
+        const future = this.getFutureValue(caret, e.data, true, true);
+        const numbers = this.getNumbers(future);
+
+        const validate = this.validateNumbers(numbers);
+
+        if (validate) {
+            const [newValue, newCaret] = this.getNormalValue(numbers.join('.'), caret);
+
+            this.el.value = newValue;
+
+            this.el.setSelectionRange(newCaret[0], newCaret[0]);
+
+            this.changeHandler(newValue);
+
+            this.prevValue = newValue;
+        } else {
+            this.el.value = this.prevValue;
+            this.el.setSelectionRange(caret[0], caret[1]);
+        }
+
+        e.preventDefault();
+        e.stopPropagation();
+        return false;
+    }
     onBlur() {
         const value = this.getValue();
         const numbers = this.getNumbers(value)
@@ -316,17 +347,27 @@ module.exports = class InputNumber {
     }
 
     initInput() {
-        this.el.addEventListener('keydown', this.onKeyDownMeta.bind(this));
-        this.el.addEventListener('keyup', this.onKeyUpMeta.bind(this));
-        this.el.addEventListener('keydown', this.onKeyDown.bind(this));
         this.el.addEventListener('paste', this.onPaste.bind(this));
         this.el.addEventListener('blur', this.onBlur.bind(this));
+
+        if(window.navigator.userAgent.indexOf('Android') > -1)
+            this.el.addEventListener('input', this.onInput.bind(this));
+        else {
+            this.el.addEventListener('keydown', this.onKeyDownMeta.bind(this));
+            this.el.addEventListener('keyup', this.onKeyUpMeta.bind(this));
+            this.el.addEventListener('keydown', this.onKeyDown.bind(this));
+        }
     }
     destroy() {
-        this.el.removeEventListener('keydown', this.onKeyDownMeta.bind(this));
-        this.el.removeEventListener('keyup', this.onKeyUpMeta.bind(this));
-        this.el.removeEventListener('keydown', this.onKeyDown.bind(this));
         this.el.removeEventListener('paste', this.onPaste.bind(this));
         this.el.removeEventListener('blur', this.onBlur.bind(this));
+
+        if(window.navigator.userAgent.indexOf('Android') > -1)
+            this.el.removeEventListener('input', this.onInput.bind(this));
+        else {
+            this.el.removeEventListener('keydown', this.onKeyDownMeta.bind(this));
+            this.el.removeEventListener('keyup', this.onKeyUpMeta.bind(this));
+            this.el.removeEventListener('keydown', this.onKeyDown.bind(this));
+        }
     }
 };
