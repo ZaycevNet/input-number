@@ -1,6 +1,6 @@
 {
   "name": "@za-utils/input-number",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "description": "Simple number input",
   "main": "vanila.js",
   "scripts": {
