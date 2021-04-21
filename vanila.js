@@ -115,12 +115,17 @@ module.exports = class InputNumber {
             const [newValue, newCaret] = this.getNormalValue(numbers.join('.'), saveCaret ? this.getCaret() : caret);
 
             this.el.value = newValue;
+            this.prevValue = newValue;
 
             if(saveCaret) {
                 this.setCaretInPreviousPlace(currentNumbers, numbers, newCaret);
             } else {
                 this.el.setSelectionRange(newCaret[0] + value.length, newCaret[0] + value.length);
             }
+        } else {
+            this.el.value = this.prevValue;
+
+            this.el.setSelectionRange(newCaret[0] -1, newCaret[0] -1);
         }
     }
 
@@ -323,7 +328,7 @@ module.exports = class InputNumber {
             this.prevValue = newValue;
         } else {
             this.el.value = this.prevValue;
-            this.el.setSelectionRange(caret[0], caret[1]);
+            this.el.setSelectionRange(caret[0] -1, caret[1] -1);
         }
 
         e.preventDefault();
