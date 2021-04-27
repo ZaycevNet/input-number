@@ -98,13 +98,15 @@ module.exports = class InputNumber {
     }
 
     setValue(value, caret = undefined, saveCaret = false) {
-        const currentValue = this.getValue();
+        const isAndroid = window.navigator.userAgent.indexOf('Android') > -1;
+
+        const currentValue = isAndroid ? this.prevValue : this.getValue();
         const currentNumbers = this.getNumbers(currentValue);
 
         if(Number(value || 0) === Number(currentValue || '0'))
             return;
 
-        caret = caret || [0, this.el.value.length];
+        caret = caret || [0, currentValue.length];
 
         const future = this.getFutureValue(caret, value, false);
         const numbers = this.getNumbers(future);
@@ -139,10 +141,10 @@ module.exports = class InputNumber {
         ];
     }
     getFutureValue(caret, key, singleKey = true, usePrevValue = false) {
-        const [startPos, endPos] = usePrevValue ? [caret[0] -1, caret[1] -1] : caret;
+        const [startPos, endPos] = (usePrevValue) ? (key === 'Backspace' ? [caret[0] +2, caret[1] +2] : [caret[0] -1, caret[1] -1]) : caret;
         const value = (usePrevValue ? this.prevValue : this.getValue()).split('');
 
-        if((!usePrevValue && key === 'Backspace') && singleKey) {
+        if((key === 'Backspace') && singleKey) {
             if(startPos === 1)
                 this.firstDelete = true;
 
@@ -306,12 +308,15 @@ module.exports = class InputNumber {
         return false;
     }
     onInput(e) {
-        if(!e.data)
-            return false;
+        let key = e.data;
+
+        if(!key) {
+            key = 'Backspace';
+        }
 
         const caret = this.getCaret();
 
-        const future = this.getFutureValue(caret, e.data, true, true);
+        const future = this.getFutureValue(caret, key, true, true);
         const numbers = this.getNumbers(future);
 
         const validate = this.validateNumbers(numbers);
